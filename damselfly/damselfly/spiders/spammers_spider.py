@@ -16,7 +16,21 @@ class SpammerSpider(scrapy.Spider):
         'https://itch.io/search?q=tijuana'
     ]
 
+    def read_city_names(self):
+        f = open('Cities.csv', 'r')
+        #creating a big list of query URLs for itch.io
+        #based on city names read from the list.
+        #why? Because I found that a lot of spam accounts sit on searches for city names.
+        for line in f:
+            self.start_urls.append('https://itch.io/search?q=' + line.strip())
+        f.close()
+    
+    def __init__(self):
+         self.read_city_names();
+        
 
+
+    
     #the default callback
     def parse(self, response):
         discovered_profiles = []
@@ -24,59 +38,23 @@ class SpammerSpider(scrapy.Spider):
             discovered_profiles.append(creator.css("a::attr(href)").extract())
 
         for profile in discovered_profiles:
-            next_page = profile[0]
+            next_page = profile[0]#a list, but it's the first element
             if next_page is not None:
                 yield response.follow(next_page, self.parse_user_profile)
 
 
     def parse_user_profile(self, response):
-        yield {'profile content': response.css('div.inner_column p').extract()}
-
-        #yield {'profile content': extract_with_css('inner_column::text')}
-
-
-'''
-#attempting to rewrite to parse into user accounts detected
-    #the default callback
-    def parse(self, response):
-        for creator in response.css('div.user_name'):
-            yield {
-                'user_url' : creator.css("a::attr(href)").extract()
-                }
-
-            #this currently isn't going to find the next page
-            #this was an example. I am going to need
-            #to find a way to generate the pages or something.
-            #but technically, this urls above are going to be what I go into
-            next_page = response.css('li.next a::attr(href)').extract_first()
-            if next_page is not None:
-                yield response.follow(next_page, callback=self.parse)
-'''
+        profile_content = response.css('div.user_profile.formatted').extract()
+        result = self.inspect_profile_for_spam( profile_content, response.url)
+        yield {'profile url' : str(response.url), 'link count': result }
 
 
-
-'''
-attempt one at parsing deeper
-
-    #the default callback
-    def parse(self, response):
-        for href in response.css('div.user_name + a::attr(href)'):
-            print("parse " + str(href))
-            yield {"user_href" : href }
-            #yield response.follow(href, self.parse_user_page)
-
-
-    def parse_user_profile(self, response):
-        def extract_with_css(query):
-            return response.css(query).extract_first().strip()
-        print("parse_user_profile " + str(href))
-        yield {
-            'account page text': extract_with_css('user_profile::text'),
-        }
-'''
-
-
-
-
+    def inspect_profile_for_spam(self, profile_content, profile_url):
+        #note: profile_content is a list
+        url_count = 0
+        for item in profile_content:
+            url_count += item.count('http')
+        return url_count
         
+
 
