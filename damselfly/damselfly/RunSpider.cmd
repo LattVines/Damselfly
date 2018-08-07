@@ -1,0 +1,1 @@
+scrapy crawl spammers -o spammers.json

@@ -6,7 +6,7 @@ results = []
 
 with open(f_name) as json_data:
   d = json.load(json_data)
-  #print(d)
+  
 
 for element in d:
     element['score'] = 0
@@ -14,7 +14,9 @@ for element in d:
 def count_links (the_list):
     '''Every url link gets 1 point'''
     for content in the_list:
-        content['score'] +=  content['link count']
+        profile_string = str(content['profile content']).lower()
+        url_count = profile_string.count('http')
+        content['score'] +=  url_count
 
 
 def inspect_for_keywords(the_list):
@@ -85,7 +87,7 @@ def inspect_for_keywords(the_list):
 
 
 def inspect_for_phone_numbers(the_list):
-    r = re.compile(r'(\d{3}[-\.\s]??\d{3}[-\.\s]??\d{4}|\(\d{3}\)\s*\d{3}[-\.\s]??\d{4}|\d{3}[-\.\s]??\d{4})')
+    r = re.compile(r'(\d{3})\D*(\d{3})\D*(\d{4})\D*(\d*)$')
     for content in the_list:
         profile = str(content['profile content'])
         result = r.findall(profile)
@@ -115,7 +117,7 @@ print("*****itch.io spam crawl*******")
 print("crawled this many: " + str(len(d)))
 print("url\t\t\t\tlink count")
 for r in d:
-    if(r['score'] >= 9):
+    if(r['score'] >= 7):
         print(r['profile url'] + "\t" + str(r['score']))
 
 
