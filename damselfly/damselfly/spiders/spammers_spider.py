@@ -46,7 +46,7 @@ class SpammerSpider(scrapy.Spider):
     def parse_user_profile(self, response):
         profile_content = response.css('div.user_profile.formatted').extract()
         result = self.inspect_profile_for_spam( profile_content, response.url)
-        yield {'profile url' : str(response.url), 'link count': result }
+        yield {'profile url' : str(response.url), 'link count': result, 'profile content' : profile_content }
 
 
     def inspect_profile_for_spam(self, profile_content, profile_url):
